@@ -1,6 +1,5 @@
 name: VoltEdge CI/CD
 
-
 on:
   push:
     branches:
