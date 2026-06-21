@@ -1,5 +1,5 @@
 name: VoltEdge CI/CD
-name: VoltEdge CI/CD
+
 
 on:
   push:
