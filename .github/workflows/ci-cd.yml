@@ -34,6 +34,7 @@ jobs:
 
       - name: Build image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
+      
 
       - name: Push image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest
