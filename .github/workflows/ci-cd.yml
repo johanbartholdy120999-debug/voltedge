@@ -7,6 +7,7 @@ on:
 
 jobs:
   ci:
+    name: Continuous Integration
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +30,8 @@ jobs:
         env:
           PYTHONPATH: .
 
-  docker:
+  cd:
+    name: Continuous Delivery
     needs: ci
     runs-on: ubuntu-latest
 
