@@ -25,7 +25,9 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          python -m pytest
+        env:
+          PYTHONPATH: .
 
   docker:
     needs: ci
@@ -48,4 +50,3 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest
-          
