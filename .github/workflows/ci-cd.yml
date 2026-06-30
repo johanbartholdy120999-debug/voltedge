@@ -1,4 +1,4 @@
-name: VoltEdge CI/CD Pipeline
+name: VoltEdge CI/CD
 
 on:
   push:
@@ -12,12 +12,7 @@ on:
 jobs:
 
   continuous-integration:
-    name: Continuous Integration
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: voltedgeapp
 
     steps:
       - name: Checkout Repository
@@ -34,7 +29,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      - name: Verify Project Imports
+      - name: Verify Imports
         run: |
           python -c "import main"
           python -c "import database"
@@ -52,20 +47,15 @@ jobs:
       - name: Start FastAPI
         run: |
           nohup python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
-          sleep 15
+          sleep 20
 
       - name: Verify API
         run: |
           curl --fail http://localhost:8000/docs
 
   continuous-delivery:
-    name: Continuous Delivery
     needs: continuous-integration
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: voltedgeapp
 
     steps:
       - name: Checkout Repository
@@ -79,8 +69,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build \
-          -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
 
       - name: Run Docker Container
         run: |
