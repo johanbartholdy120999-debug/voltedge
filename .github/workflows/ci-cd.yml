@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-
   docker:
     runs-on: ubuntu-latest
 
@@ -20,14 +19,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build Docker Image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
+      - name: Build image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
 
-      - name: Push Docker Image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest
-
+      - name: Push image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest
 
   windows-exe:
     runs-on: windows-latest
@@ -36,11 +32,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12
-          
+          python-version: "3.14"
 
       - name: Install dependencies
         run: |
@@ -49,12 +44,10 @@ jobs:
           pip install pyinstaller
 
       - name: Build EXE
-        run: |
-          pyinstaller --onefile main.py
+        run: pyinstaller --onefile main.py
 
       - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: VoltEdge-EXE
           path: dist/main.exe
-          
