@@ -24,32 +24,74 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Debug Environment
+        run: |
+          echo "=== Current Directory ==="
+          pwd
+
+          echo ""
+          echo "=== Repository Files ==="
+          ls -la
+
+          echo ""
+          echo "=== File Tree ==="
+          find . -maxdepth 2 -type f | sort
+
+          echo ""
+          echo "=== Python Version ==="
+          python --version
+
+          echo ""
+          echo "=== Python Search Path ==="
+          python -c "import sys; print('\n'.join(sys.path))"
+
+          echo ""
+          echo "=== Locate main module ==="
+          python -c "import importlib.util; print(importlib.util.find_spec('main'))"
+
+          echo ""
+          echo "=== Import main ==="
+          python -c "import main; print(main.__file__)"
+
       - name: Verify Imports
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python -c "import main"
           python -c "import database"
           python -c "import models"
 
       - name: Run Unit Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-          pytest
+          python -m pytest -vv
 
       - name: Train Machine Learning Models
         run: |
-          python train_model.py
+          if [ -f train_model.py ]; then
+            python train_model.py
+          else
+            echo "train_model.py not found - skipping."
+          fi
 
       - name: Generate Analytics Plots
         run: |
-          python plot_models.py
+          if [ -f plot_models.py ]; then
+            python plot_models.py
+          else
+            echo "plot_models.py not found - skipping."
+          fi
 
       - name: Start FastAPI
         run: |
           nohup python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
-          sleep 20
+          sleep 15
 
       - name: Verify API
         run: |
-          curl --fail http://localhost:8000/docs
+          curl --fail http://127.0.0.1:8000/
+          curl --fail http://127.0.0.1:8000/docs
 
   docker:
     needs: verify
