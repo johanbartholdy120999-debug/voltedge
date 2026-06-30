@@ -1,15 +1,23 @@
-name: VoltEdge Final CI/CD
+name: VoltEdge CI/CD Pipeline
 
 on:
   push:
+    branches:
+      - main
 
-    branches: [main]
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  verify:
+
+  continuous-integration:
+    name: Continuous Integration
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: voltedgeapp
 
     steps:
       - name: Checkout Repository
@@ -20,69 +28,26 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Debug Environment
-        run: |
-          echo "=== Current Directory ==="
-          pwd
-
-          echo ""
-          echo "=== Repository Files ==="
-          ls -la
-
-          echo ""
-          echo "=== File Tree ==="
-          find . -maxdepth 2 -type f | sort
-
-          echo ""
-          echo "=== Python Version ==="
-          python --version
-
-          echo ""
-          echo "=== Python Search Path ==="
-          python -c "import sys; print('\n'.join(sys.path))"
-
-          echo ""
-          echo "=== Locate main module ==="
-          python -c "import importlib.util; print(importlib.util.find_spec('main'))"
-
-          echo ""
-          echo "=== Import main ==="
-          python -c "import main; print(main.__file__)"
-
-      - name: Verify Imports
-        env:
-          PYTHONPATH: ${{ github.workspace }}
+      - name: Verify Project Imports
         run: |
           python -c "import main"
           python -c "import database"
           python -c "import models"
 
       - name: Run Unit Tests
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          python -m pytest -vv
+        run: pytest
 
       - name: Train Machine Learning Models
-        run: |
-          if [ -f train_model.py ]; then
-            python train_model.py
-          else
-            echo "train_model.py not found - skipping."
-          fi
+        run: python train_model.py
 
       - name: Generate Analytics Plots
-        run: |
-          if [ -f plot_models.py ]; then
-            python plot_models.py
-          else
-            echo "plot_models.py not found - skipping."
-          fi
+        run: python plot_models.py
 
       - name: Start FastAPI
         run: |
@@ -91,12 +56,16 @@ jobs:
 
       - name: Verify API
         run: |
-          curl --fail http://127.0.0.1:8000/
-          curl --fail http://127.0.0.1:8000/docs
+          curl --fail http://localhost:8000/docs
 
-  docker:
-    needs: verify
+  continuous-delivery:
+    name: Continuous Delivery
+    needs: continuous-integration
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: voltedgeapp
 
     steps:
       - name: Checkout Repository
@@ -110,7 +79,22 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -f dockerfile -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
+          docker build \
+          -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
+
+      - name: Run Docker Container
+        run: |
+          docker run -d \
+            --name voltedge \
+            -p 8000:8000 \
+            ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest
+
+      - name: Wait for Container
+        run: sleep 20
+
+      - name: Verify Docker API
+        run: |
+          curl --fail http://localhost:8000/docs
 
       - name: Push Docker Image
         run: |
