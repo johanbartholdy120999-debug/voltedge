@@ -56,3 +56,4 @@ jobs:
         with:
           name: VoltEdge-EXE
           path: dist/main.exe
+          
