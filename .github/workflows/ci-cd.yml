@@ -10,10 +10,6 @@ jobs:
   verify:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: voltedgeapp
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -59,10 +55,6 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: voltedgeapp
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -75,7 +67,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
+          docker build -f dockerfile -t ${{ secrets.DOCKER_USERNAME }}/voltedge-api:latest .
 
       - name: Push Docker Image
         run: |
